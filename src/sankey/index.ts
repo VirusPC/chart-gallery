@@ -1,6 +1,7 @@
-import * as d3 from "d3"
+import * as d3 from "d3";
+import { D3BrushEvent } from "d3";
 
-let svg = d3.select("svg");
+let svg: d3.Selection<SVGSVGElement, null, any, unknown> = d3.select("svg");
 
 svg
     .attr("width", 100)

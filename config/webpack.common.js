@@ -1,12 +1,18 @@
 const path = require("path");
 const fs = require("fs");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
+ 
+let examplesDirPath = path.resolve(__dirname, "../src");
+let examplesName = fs.readdirSync(examplesDirPath)
+                    .filter((item) => fs.statSync(path.resolve(examplesDirPath, item)).isDirectory());
+let entryObj = {};
+examplesName.forEach((name) => entryObj[name] = './src/'+name+'/index.ts');
+
 
 module.exports = {
   entry: {
-    "index": "./src/index.js",
-    "sankey": "./src/sankey/index.js",
-    "force-directed": "./src/force-directed/index.ts"
+    "index": "./src/index.ts",
+    ...entryObj
   },
 
   output: {
@@ -57,16 +63,10 @@ module.exports = {
       template: './src/index.html',
       chunks: ['index']
     }),
-    new HtmlWebpackPlugin({
-      filename: "sankey/index.html",
-      template: './src/sankey/index.html',
-      chunks: ['sankey']
-    }),
-    new HtmlWebpackPlugin({
-        filename: "force-directed/index.html",
-        template: "./src/force-directed/index.html",
-        chunks: ['force-directed']
-    })
-
-  ],
+    ...examplesName.map((name) => new HtmlWebpackPlugin({
+      filename: name + '/index.html',
+      template: './src/' + name + '/index.html',
+      chunks: [name]
+    }))
+  ]
 }
