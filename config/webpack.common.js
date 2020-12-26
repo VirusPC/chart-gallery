@@ -17,7 +17,7 @@ module.exports = {
 
   output: {
     path: path.resolve(__dirname, '../dist'), // 根目录
-    filename: 'js/[name].[hash].bundle.js',
+    filename: 'js/[name]/[name].[hash].bundle.js',
     publicPath: "/"
   },
 
