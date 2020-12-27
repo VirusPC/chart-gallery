@@ -18,7 +18,7 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, '../dist'), // 根目录
     filename: 'js/[name]/[name].[hash].bundle.js',
-    publicPath: "/"
+    publicPath: "/",
   },
 
   // 所有的loader都要在module对象中的rules属性中
@@ -54,6 +54,29 @@ module.exports = {
         use: 'ts-loader',
         exclude: /node_modules/,
       },
+      {
+        test: /(\.m?js$) | (\.ts$)/,
+        exclude: /node_modules/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: [
+              [
+                '@babel/preset-env',
+                {
+                  useBuiltIns: 'usage',   // 按需引入,需要使用polyfill
+                  corejs: { version: 3 },  // 解决warn
+                    targets: {  // 指定兼容性处理哪些浏览器
+                      "chrome": "58",
+                      "ie": "9"
+                    }
+                }
+              ]
+            ],
+            cacheDirectory: true, // 开启babel缓存
+          }
+        }
+      }
     ],
   },
   
@@ -68,5 +91,9 @@ module.exports = {
       template: './src/' + name + '/index.html',
       chunks: [name]
     }))
-  ]
+  ],
+
+  resolve: {
+    extensions: ['.ts', '.tsx', '.js']
+  },
 }
