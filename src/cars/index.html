@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Dashboard with Brushing and Linking</title>
+    <style>
+
+    </style>
+</head>
+
+<body>
+    <h1>Dashboard with Brushing and Linking</h1>
+    <a href="https://observablehq.com/@weiglemc/brushing-and-linking-example-with-vega-lite">source</a>
+    <br>
+    <br>
+    <br>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <script>
+
+
+        d3.json("./cars.json").then((data) => {
+
+            // keys of binned
+            const keys = ['Cylinders', 'Displacement', 'Weight_in_lbs']//, 'Acceleration']
+
+            // layout
+            const width = 900,
+                height = 500;
+            const widthBinnedChart = width / 2,
+                heightBinnedChart= height / keys.length;
+            const widthScatterPlot = width - widthBinnedChart,
+                heightScatterPlot = height;
+
+
+            const svg = d3.select("body").append("svg")
+                .attr("width", width)
+                .attr("height", height)
+                .attr("viewbox", `0 0 width height`);
+
+            const filterFuncs = {};
+            const [filterExtents, setFilterExtent] = initExtent(filterFuncs);
+            for(let i = 0; i < keys.length; i++) {
+                const key = keys[i];
+                const g = svg.append("g")
+                    .attr("class", "group" + key)
+                    .attr("transform", `translate(0, ${heightBinnedChart * i})`);
+                const filterFunc= renderBinnedChart(g, widthBinnedChart, heightBinnedChart, data, key, setFilterExtent);
+                filterFuncs[key] = filterFunc;
+            }
+            console.log(data);
+        });
+
+        function renderBinnedChart(root, width, height, data, key, setFilterExtent) {
+            // layout
+            const margin = {top:10, right:10, bottom: 30, left: 50};
+            width -= margin.left + margin.right;
+            height -= margin.top + margin.bottom;
+
+            // data manipulation
+            const extent = d3.extent(data, d => d[key]);
+            const bin = d3.bin()
+                .domain(extent)
+                .value(d => d[key])
+                //.thresholds(d3.thresholdSturges);
+            const binnedData = bin(data);
+            let maxY = 0;
+            binnedData.forEach(d => {if(d.length > maxY) maxY = d.length});
+            const bandStep = width / binnedData.length; 
+            const bandWidth = bandStep * 0.9;
+            const bandPadding = (bandStep - bandWidth) / 2;
+            //console.log(binnedData);
+
+            // scales
+            const scaleX = d3.scaleLinear()
+                .domain(extent)
+                .range([0, width])
+                .nice()
+                .clamp(true);
+            const scaleY = d3.scaleLinear()
+                .domain([0, maxY])
+                .range([height, 0])
+                .nice()
+                .clamp(true);
+
+            // groups
+            const groupAxisX = root.append("g")
+                .attr("class", "groupAxisX")
+                .attr("transform", `translate(${margin.left}, ${margin.top + height})`);
+            const groupAxisY = root.append("g")
+                .attr("class", "groupAxisY")
+                .attr("transform", `translate(${margin.left}, ${margin.top})`)
+            const groupPlot = root.append("g")
+                .attr("class", "groupPlot")
+                .attr("transform", `translate(${margin.left}, ${margin.top})`)
+            const groupMarks = groupPlot.append("g")
+                .attr("class", "groupMarks")
+            const groupMarksFiltered = groupPlot.append("g")
+                .attr("class", "groupMarksFiltered")
+
+            // draw
+            groupAxisX.call(d3.axisBottom(scaleX));
+            groupAxisY.call(d3.axisLeft(scaleY))
+                .call(g => 
+                    g.selectAll(".tick line")
+                        .clone()
+                        .attr("stroke-opacity", 0.1)
+                        .attr("x2", width)
+                ).call(g => 
+                    g.selectAll(".tick")
+                        .each(function(node, i){
+                            if(i%2===1) d3.select(this).select("text").remove();
+                        })
+                );
+            groupMarks.selectAll("rect")
+                .data(binnedData)
+                .join("rect")
+                .attr("fill", "grey")
+                .attr("x", (d, i) => i * bandStep + bandPadding)
+                .attr("y", d => scaleY(d.length))
+                .attr("width", bandWidth)
+                .attr("height", d => scaleY(0) - scaleY(d.length))
+            const barsFiltered = groupMarksFiltered.selectAll("rect")
+                .data(binnedData)
+                .join("rect")
+                .attr("fill", "steelblue")
+                .attr("x", (d, i) => i * bandStep + bandPadding)
+                .attr("y", d => scaleY(d.length))
+                .attr("width", bandWidth)
+                .attr("height", d => scaleY(0) - scaleY(d.length))
+            
+
+            const brush= d3.brushX().extent([[0, 0], [width, height]]).on("brush", brushed);
+            brush(groupPlot);
+
+            function brushed(e) {
+                const selection = e.selection;
+                setFilterExtent(key, [scaleX.invert(selection[0]), scaleX.invert(selection[1])]);
+            }
+
+            function filterData(filterExtents){
+                // const dataFiltered = barsFiltered.data().map(
+                //     dataOneBar => {
+                //         for(const key in filterExtents) {
+                //            const extent = filterExtents[key]; 
+                //            if(!extent) continue;
+                //            dataOneBar = dataOneBar.filter(d => extent[0]<=d[key] && extent[1]>=d[key])
+                //         }
+                //         return dataOneBar;
+                //     }
+                // );
+                barsFiltered
+                    .attr("y", d => {
+                        for(const key in filterExtents) {
+                           const extent = filterExtents[key]; 
+                           if(!extent) continue;
+                           d = d.filter(d => extent[0]<=d[key] && extent[1]>=d[key])
+                        }
+                        return scaleY(d.length)
+                    })
+                    .attr("height", d => {
+                        for(const key in filterExtents) {
+                           const extent = filterExtents[key]; 
+                           if(!extent) continue;
+                           d = d.filter(d => extent[0]<=d[key] && extent[1]>=d[key])
+                        }
+                        return scaleY(0) - scaleY(d.length)
+                    });
+            }
+
+            return filterData;
+        }
+
+        /**
+         * @param {[key: string]: (extent: [number, number]) => void} filterFuncs 各个直方图在过滤条件发生改变时, 触发的重新渲染函数.
+         */
+        function initExtent(filterFuncs){
+            const filterExtents = {}; 
+
+            function setFilterExtent(key, value) {
+                filterExtents[key] = value;
+                for(const key in filterFuncs) {
+                    filterFuncs[key](filterExtents);
+                }
+            }
+
+            return [filterExtents, setFilterExtent];
+        }
+
+    </script>
+</body>
+
+</html>
