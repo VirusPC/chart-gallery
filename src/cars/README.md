@@ -4,12 +4,6 @@ Cross-Filter Among Multiple Histograms
 <!-- ![overview](./index.png) -->
 <img src="https://raw.githubusercontent.com/VirusPC/chart-gallery/master/src/cars/index.png" alt="overview" style="align: center">
 
-Table of Contents
----
-
-- [Introduction](#:book:-introduction)
-- [Key Points](#:bulb:-key-points)
-
 :book: Introduction
 ---
 
