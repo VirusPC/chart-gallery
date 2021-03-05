@@ -22,13 +22,18 @@
 
         d3.json("./cars.json").then((data) => {
 
-            // keys of binned
+            // fields to bin
             const keys = ['Cylinders', 'Displacement', 'Weight_in_lbs', 'Acceleration']; // Can choosen from one of the properties.
+
+            // fields of scatter plot
+            const fieldX = "Horsepower";
+            const fieldY = "Miles_per_Gallon";
+            const fieldColor = "Origin"
 
             // layout
             const width = 900,
                 height = 500;
-            const widthBinnedChart = width / 2,
+            const widthBinnedChart = width / 3,
                 heightBinnedChart= height / keys.length;
             const widthScatterPlot = width - widthBinnedChart,
                 heightScatterPlot = height;
@@ -41,15 +46,23 @@
 
             const filterFuncs = {};
             const [filterExtents, setFilterExtent] = createExtent(filterFuncs);
+
+            // render histograms
             for(let i = 0; i < keys.length; i++) {
                 const key = keys[i];
-                const g = svg.append("g")
+                const groupBinedChart = svg.append("g")
                     .attr("class", "group" + key)
                     .attr("transform", `translate(0, ${heightBinnedChart * i})`);
-                const filterFunc= renderBinnedChart(g, widthBinnedChart, heightBinnedChart, data, key, setFilterExtent);
+                const filterFunc= renderBinnedChart(groupBinedChart, widthBinnedChart, heightBinnedChart, data, key, setFilterExtent);
                 filterFuncs[key] = filterFunc;
             }
-            console.log(data);
+            
+            // render scatter plot
+            const groupScatterPlot = svg.append("g")
+                .attr("class", "groupScatterPlot")
+                .attr("transform", `translate(${widthBinnedChart}, 0)`)
+
+            filterFuncs["scatter"] = renderScatterPlot(groupScatterPlot, widthScatterPlot, heightScatterPlot, data, fieldX, fieldY, fieldColor, setFilterExtent);
         });
 
         function renderBinnedChart(root, width, height, data, key, setFilterExtent) {
@@ -169,6 +182,216 @@
             }
 
             return filterData;
+        }
+
+
+        function renderScatterPlot(root, width, height, data, fieldX, fieldY, fieldColor, setFilterExtent) {
+            // settings
+            const radius = 3;
+            const colorHidden = "#ddd";
+            const tooltipFields = ['Miles_per_Gallon', 'Cylinders', 'Displacement', 'Horsepower', 'Weight_in_lbs', 'Acceleration', 'Name'];
+            
+            // layout
+            const margin = {top:10, right:100, bottom: 50, left: 50};
+            width -= margin.left + margin.right;
+            height -= margin.top + margin.bottom;
+
+            // data manipulation
+            data = data.filter((d) => !!(d[fieldX] && d[fieldY]))
+            const extentX = [0, d3.max(data, d => d[fieldX])];
+            const extentY = [0, d3.max(data, d => d[fieldY])];
+            const valuesColorSet = new Set;
+            for(const datum of data) {
+                valuesColorSet.add(datum[fieldColor]);
+            }
+            const valuesColor = Array.from(valuesColorSet);
+
+            // scales
+            const scaleX = d3.scaleLinear()
+                .domain(extentX)
+                .range([0, width])
+                .nice()
+                .clamp(true);
+            const scaleY = d3.scaleLinear()
+                .domain(extentY)
+                .range([height, 0])
+                .nice()
+                .clamp(true);
+            const scaleColor = d3.scaleOrdinal()
+                .domain(valuesColor)
+                .range(d3.schemeTableau10);
+
+            // groups
+            const groupAxisX = root.append("g")
+                .attr("class", "groupAxisX")
+                .attr("transform", `translate(${margin.left}, ${margin.top + height})`);
+            const groupAxisY = root.append("g")
+                .attr("class", "groupAxisY")
+                .attr("transform", `translate(${margin.left}, ${margin.top})`)
+            const groupMarks = root.append("g")
+                .attr("class", "groupMarks")
+                .attr("transform", `translate(${margin.left}, ${margin.top})`)
+            const groupLegends = root.append("g")
+                .attr("class", "groupLegends")
+                .attr("transform", `translate(${margin.left + width}, ${margin.top})`)
+            const groupTooltip = root.append("g")
+                .attr("class", "tooltip")
+                .attr("transform", `translate(${margin.left}, ${margin.top})`)
+                //.attr("display", "none")
+
+            // draw
+            groupAxisX.call(d3.axisBottom(scaleX))
+                .call(g => 
+                    g.selectAll(".tick line")
+                        .clone()
+                        .attr("stroke-opacity", 0.1)
+                        .attr("y2", -height)
+                );
+            groupAxisY.call(d3.axisLeft(scaleY))
+                .call(g => 
+                    g.selectAll(".tick line")
+                        .clone()
+                        .attr("stroke-opacity", 0.1)
+                        .attr("x2", width)
+                );
+            const circles = groupMarks.selectAll("circle")
+                .data(data)
+                .join("circle")
+                .attr("fill", "none")
+                .attr("stroke-width", 2)
+                .attr("stroke", d => scaleColor(d[fieldColor]))
+                .attr("cx", d => scaleX(d[fieldX]))
+                .attr("cy", d => scaleY(d[fieldY]))
+                .attr("r", radius)
+                .on("mouseover", onMouseover)
+                .on("mouseleave", onMoueleave);
+            
+            renderLegends(groupLegends, margin.right, height + margin.top + margin.left, fieldColor, scaleColor);
+            //renderTooltip(groupTooltip, 0, 0, data, tooltipFields);
+
+            //groupTooltip.attr("display", null)
+            function onMouseover(e) {
+                const circleSelected = d3.select(this);
+                const data = circleSelected.datum();
+                const dx = 10,
+                    dy = 10;
+                const x = +circleSelected.attr("cx") + margin.left + dx;
+                const y = +circleSelected.attr("cy") + margin.top + dy;
+                renderTooltip(groupTooltip, x, y, data, tooltipFields);
+            }
+            function onMoueleave(e) {
+                //groupTooltip.attr("display", "none");
+                groupTooltip.selectAll("*").remove();
+            }
+            
+            function filterData(filterExtents){
+                circles
+                    .attr("stroke", d => {
+                        for(const key in filterExtents) {
+                            const extent = filterExtents[key]; 
+                            if(extent && (d[key] < extent[0] || d[key]>extent[1])) return colorHidden;
+                        }
+                        return scaleColor(d[fieldColor]);
+                    })
+            }
+
+            return filterData;
+        }
+
+        function renderLegends(root, width, height, field, scaleColor) {
+            // settings
+            const radius = 4;
+            
+            // layout
+            const margin = {top:10, right:50, bottom: height / 6 * 5, left: 10};
+            width -= margin.left + margin.right;
+            height -= margin.top + margin.bottom;
+
+            // data manipulation
+            const domain = scaleColor.domain(); 
+
+            //scale
+            const scaleY = d3.scalePoint()
+                .domain(domain)
+                .range([height, 0]);
+
+            // groups
+            const groupTitle = root.append("g")
+                .attr("class", "groupTitle")
+                .attr("transform", `translate(${margin.left + width}, ${5})`)
+            const groupAxisY = root.append("g")
+                .attr("class", "groupAxisY")
+                .attr("transform", `translate(${margin.left + width}, ${margin.top  * 2})`)
+            const groupMarks = root.append("g")
+                .attr("class", "groupMarks")
+                .attr("transform", `translate(${margin.left}, ${margin.top * 2})`)
+
+
+            // draw
+            groupTitle.append("text")
+                .attr("text-anchor", "middle")
+                .text(field);
+            groupAxisY.call(d3.axisRight(scaleY))
+                .call(g => 
+                    g.selectAll(".domain").remove()
+                );
+            groupMarks.selectAll("circle")
+                .data(domain)
+                .join("circle")
+                .attr("fill", "none")
+                .attr("stroke-width", 2)
+                .attr("stroke", d => scaleColor(d))
+                .attr("cx", width / 2)
+                .attr("cy", d => scaleY(d))
+                .attr("r", radius);
+        }
+
+        function renderTooltip(root, x, y, data, fieldsToShow) {
+            const colorBackground = "#fff";
+            const colorKey = "#888"
+            const fontSize = "12px";
+            const fontWeight = "normal"
+            const fontFamily = "sans-serif";
+            const textSpan = 15;
+
+            root.attr("transform", `translate(${x}, ${y})`);
+            const groupBackground = root.append("g");
+            const groupKeyText = root.append("g").attr("color", colorKey);
+            const groupValueText = root.append("g");
+
+
+            for(let i = 0; i< fieldsToShow.length; i++) {
+                const field = fieldsToShow[i] ?? "none";
+                groupKeyText.append("text")
+                    .text(field + ":　")
+                    //.attr("font-color", colorKey)
+                    .attr("stroke", colorKey)
+                    .attr('y', textSpan * i + 10)
+                    .attr("font-size", fontSize)
+                    .attr("font-weight", fontWeight)
+                    .attr("font-family", fontFamily)
+                    .attr("text-anchor", "end")
+                groupValueText.append("text")
+                    .text(data[field])
+                    .attr('y', textSpan * i + 10)
+                    .attr("font-size", fontSize)
+                    .attr("font-weight", fontWeight)
+                    .attr("font-family", fontFamily)
+                    .attr("text-anchor", "start")
+            }
+            const bboxKey = groupKeyText.node().getBBox();
+            const bboxValue = groupValueText.node().getBBox();
+            
+            groupKeyText.attr("transform", `translate(${bboxKey.width}, 0)`)
+            groupValueText.attr("transform", `translate(${bboxKey.width}, 0)`)
+            groupBackground.append("rect")
+                .attr("fill", colorBackground)
+                .attr("opacity", 1)
+                .attr("width", bboxKey.width + bboxValue.width)
+                .attr("height", Math.max(bboxKey.height, bboxValue.height))
+                .attr("stroke", "#000")
+                .attr("rx", "10px")
+            
         }
 
         /**
