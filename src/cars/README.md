@@ -2,7 +2,7 @@ Cross-Filter Among Multiple Histograms
 ===
 
 <!-- ![overview](./index.png) -->
-<img src="./index.png" alt="overview" style="align: center">
+<img src="https://raw.githubusercontent.com/VirusPC/chart-gallery/master/src/cars/index.png" alt="overview" style="align: center">
 
 :book:Introduction
 ---
