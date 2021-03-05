@@ -7,8 +7,8 @@ Cross-Filter Among Multiple Histograms
 Table of Contents
 ---
 
-* [Introduction](#:book:-introduction)
-* [Key Points](#:bulb:-key-points)
+- [Introduction](#:book:-introduction)
+- [Key Points](#:bulb:-key-points)
 
 :book: Introduction
 ---
