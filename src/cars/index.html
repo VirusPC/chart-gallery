@@ -23,7 +23,7 @@
         d3.json("./cars.json").then((data) => {
 
             // keys of binned
-            const keys = ['Cylinders', 'Displacement', 'Weight_in_lbs']//, 'Acceleration']
+            const keys = ['Cylinders', 'Displacement', 'Weight_in_lbs', 'Acceleration']; // Can choosen from one of the properties.
 
             // layout
             const width = 900,
@@ -40,7 +40,7 @@
                 .attr("viewbox", `0 0 width height`);
 
             const filterFuncs = {};
-            const [filterExtents, setFilterExtent] = initExtent(filterFuncs);
+            const [filterExtents, setFilterExtent] = createExtent(filterFuncs);
             for(let i = 0; i < keys.length; i++) {
                 const key = keys[i];
                 const g = svg.append("g")
@@ -70,7 +70,6 @@
             const bandStep = width / binnedData.length; 
             const bandWidth = bandStep * 0.9;
             const bandPadding = (bandStep - bandWidth) / 2;
-            //console.log(binnedData);
 
             // scales
             const scaleX = d3.scaleLinear()
@@ -131,40 +130,40 @@
                 .attr("height", d => scaleY(0) - scaleY(d.length))
             
 
-            const brush= d3.brushX().extent([[0, 0], [width, height]]).on("brush", brushed);
+            const brush= d3.brushX()
+                .extent([[0, 0], [width, height]])
+                .on("brush end", brushed); // "end" to capture the event that click but not drag.
             brush(groupPlot);
 
             function brushed(e) {
-                const selection = e.selection;
-                setFilterExtent(key, [scaleX.invert(selection[0]), scaleX.invert(selection[1])]);
+                const { selection } = e;
+                if(selection) {
+                    setFilterExtent(key, [scaleX.invert(selection[0]), scaleX.invert(selection[1])]);
+                } else { // reset
+                    setFilterExtent(key)
+                }
             }
 
             function filterData(filterExtents){
-                // const dataFiltered = barsFiltered.data().map(
-                //     dataOneBar => {
-                //         for(const key in filterExtents) {
-                //            const extent = filterExtents[key]; 
-                //            if(!extent) continue;
-                //            dataOneBar = dataOneBar.filter(d => extent[0]<=d[key] && extent[1]>=d[key])
-                //         }
-                //         return dataOneBar;
-                //     }
-                // );
                 barsFiltered
                     .attr("y", d => {
-                        for(const key in filterExtents) {
-                           const extent = filterExtents[key]; 
-                           if(!extent) continue;
-                           d = d.filter(d => extent[0]<=d[key] && extent[1]>=d[key])
-                        }
+                        d = d.filter(d => {
+                            for(const key in filterExtents) {
+                               const extent = filterExtents[key]; 
+                               if(extent && (d[key] < extent[0] || d[key]>extent[1])) return false;
+                            }
+                            return true;
+                        })
                         return scaleY(d.length)
                     })
                     .attr("height", d => {
-                        for(const key in filterExtents) {
-                           const extent = filterExtents[key]; 
-                           if(!extent) continue;
-                           d = d.filter(d => extent[0]<=d[key] && extent[1]>=d[key])
-                        }
+                        d = d.filter(d => {
+                            for(const key in filterExtents) {
+                               const extent = filterExtents[key]; 
+                               if(extent && (d[key] < extent[0] || d[key]>extent[1])) return false;
+                            }
+                            return true;
+                        })
                         return scaleY(0) - scaleY(d.length)
                     });
             }
@@ -173,15 +172,15 @@
         }
 
         /**
-         * @param {[key: string]: (extent: [number, number]) => void} filterFuncs 各个直方图在过滤条件发生改变时, 触发的重新渲染函数.
+         * @param {([key: string]: (extent: [number, number]) => void)[]} updateFuncs
          */
-        function initExtent(filterFuncs){
+        function createExtent(updateFuncs = {}){
             const filterExtents = {}; 
 
             function setFilterExtent(key, value) {
                 filterExtents[key] = value;
-                for(const key in filterFuncs) {
-                    filterFuncs[key](filterExtents);
+                for(const key in updateFuncs) {
+                    updateFuncs[key](filterExtents);
                 }
             }
 
