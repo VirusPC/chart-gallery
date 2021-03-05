@@ -4,12 +4,18 @@ Cross-Filter Among Multiple Histograms
 <!-- ![overview](./index.png) -->
 <img src="https://raw.githubusercontent.com/VirusPC/chart-gallery/master/src/cars/index.png" alt="overview" style="align: center">
 
-:book:Introduction
+Table of Contents
+---
+
+* [Introduction](#:book:-introduction)
+* [Key Points](#:bulb:-key-points)
+
+:book: Introduction
 ---
 
 Add brush interaction to Multipule Histograms. Brushing on each histogram will influence all of them. In other words, the brushes on each histogram can work together to filter data.
 
-:bulb:Key Points
+:bulb: Key Points
 ---
 
 1. The render funtion of histogram will return an update function: ```filterData```. It accept an ```filterExtends``` parameter, and will update the histogram according to the ```filterExtends```.
