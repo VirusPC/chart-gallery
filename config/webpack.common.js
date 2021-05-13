@@ -6,12 +6,12 @@ let examplesDirPath = path.resolve(__dirname, "../src");
 let examplesName = fs.readdirSync(examplesDirPath)
                     .filter((item) => fs.statSync(path.resolve(examplesDirPath, item)).isDirectory());
 let entryObj = {};
-examplesName.forEach((name) => entryObj[name] = './src/'+name+'/index.ts');
+examplesName.forEach((name) => entryObj[name] = './src/'+name+'/index.js');
 
 
 module.exports = {
   entry: {
-    "index": "./src/index.ts",
+    "index": "./src/index.js",
     ...entryObj
   },
 

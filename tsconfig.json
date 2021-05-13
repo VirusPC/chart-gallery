@@ -8,9 +8,11 @@
     "preserveConstEnums": true,
     "removeComments": true,
     "sourceMap": true,
-    "target": "es5"
+    "target": "es5",
+    "downlevelIteration": true,               /* Provide full support for iterables in 'for-of', spread, and destructuring when targeting 'ES5' or 'ES3'. */
+
   },
   "include": [
-    "./src/**/*"
+    "./src/"
   ]
 }
