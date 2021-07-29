@@ -14,7 +14,8 @@
     "@wordpress/token-list": "^1.14.0",
     "d3": "^6.2.0",
     "d3-sankey": "^0.12.3",
-    "lodash": "^4.17.20"
+    "lodash": "^4.17.20",
+    "webpack-merge": "^4.2.2"
   },
   "devDependencies": {
     "@babel/core": "^7.12.10",

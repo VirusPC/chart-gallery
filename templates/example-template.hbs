@@ -5,8 +5,19 @@
     <title>{{titleCase name}}</title>
   </head>
   <body>
-    <header></header>
+    <header>
+      <h1>
+        <a href="/index.html">Home</a>
+        &nbsp;>&nbsp;
+        {{titleCase name}}
+      </h1>
+      <hr/>
+    </header>
     <main>
+      <a href={{source}}>Source</a>
+      <br/>
+      <br/>
+      <br/>
       <svg id='canvas'></svg>
     </main>
   </body>

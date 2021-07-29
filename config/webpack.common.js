@@ -1,57 +1,74 @@
 const path = require("path");
 const fs = require("fs");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
- 
-let examplesDirPath = path.resolve(__dirname, "../src");
-let examplesName = fs.readdirSync(examplesDirPath)
-                    .filter((item) => fs.statSync(path.resolve(examplesDirPath, item)).isDirectory());
-let entryObj = {};
-examplesName.forEach((name) => entryObj[name] = './src/'+name+'/index.js');
 
+const dirPath = path.resolve(__dirname, "../src");
+const examples = {};
+fs.readdirSync(dirPath)
+  .filter((item) => fs.statSync(path.resolve(dirPath, item)).isDirectory())
+  .forEach((frameworkName) => {
+    examples[frameworkName] = [];
+    fs.readdirSync(path.resolve(dirPath, frameworkName))
+      .filter((item) => fs.statSync(path.resolve(dirPath, frameworkName, item)).isDirectory())
+      .forEach((example) => examples[frameworkName].push(example));
+  });
+
+console.log("Example List", examples);
+
+let entryObj = {};
+for(const framework of Object.keys(examples)){
+  examples[framework].forEach((example) => entryObj[`${framework}-${example}`] = "./" + path.join("./src", framework, example,"index.js"))
+}
+console.log(entryObj);
 
 module.exports = {
   entry: {
-    "index": "./src/index.js",
-    ...entryObj
+    index: "./src/index.js",
+    ...entryObj,
   },
 
   output: {
-    path: path.resolve(__dirname, '../dist'), // 根目录
-    filename: 'js/[name]/[name].[hash].bundle.js',
+    path: path.resolve(__dirname, "../dist"), // 根目录
+    filename: "js/[name]/[name].[hash].bundle.js",
     publicPath: "/",
   },
 
   // 所有的loader都要在module对象中的rules属性中
   module: {
-    rules: [  // rules中每一个对象就是一个loader
-      {  // css
+    rules: [
+      // rules中每一个对象就是一个loader
+      {
+        // css
         test: /\.css$/i,
         use: [
-            'style-loader',  // 用于在html文档中创建一个style标签, 将样式塞进去
-            'css-loader' // 将less编译为css, 但不生成单独的css文件, 在内存中.
-        ]
+          "style-loader", // 用于在html文档中创建一个style标签, 将样式塞进去
+          "css-loader", // 将less编译为css, 但不生成单独的css文件, 在内存中.
+        ],
       },
-      {  // html中的标签资源
+      {
+        // html中的标签资源
         test: /\.html$/i,
-        loader: 'html-loader',
+        loader: "html-loader",
       },
-      {  // images
+      {
+        // images
         test: /\.(png|jpg|gif)$/i,
         use: [
           {
-            loader: 'url-loader',
+            loader: "url-loader",
             options: {
-              limit: 8192,  // 8kb以下的图片会被base64处理
-              publicPath: '/images/',  // 决定转换后的图片的url路径
-              outputPath: './images',  // 决定文件本地输出路径
-              name: '[hash:5].[ext]'  // 修改文件名称[hash:8] hash值取8位 [ext] 文件扩展名
-            }
-          }
-        ]
+              limit: 8192, // 8kb以下的图片会被base64处理
+              publicPath: "/images/", // 决定转换后的图片的url路径
+              outputPath: "./images", // 决定文件本地输出路径
+              name: "[hash:5].[ext]", // 修改文件名称[hash:8] hash值取8位 [ext] 文件扩展名
+            },
+          },
+        ],
       },
-      {  //ts, tsx
+      {
+        //ts, tsx
         test: /\.tsx?$/,
-        use: 'ts-loader',
+        use: "ts-loader",
         exclude: /node_modules/,
       },
       // {
@@ -79,21 +96,26 @@ module.exports = {
       // }
     ],
   },
-  
+
   plugins: [
     new HtmlWebpackPlugin({
       filename: "index.html",
-      template: './src/index.html',
-      chunks: ['index']
+      template: "./src/index.html",
+      chunks: ["index"],
     }),
-    ...examplesName.map((name) => new HtmlWebpackPlugin({
-      filename: name + '/index.html',
-      template: './src/' + name + '/index.html',
-      chunks: [name]
-    }))
+    ...Object.keys(examples).flatMap(
+      (framework) => examples[framework].map(example =>
+        new HtmlWebpackPlugin({
+          filename: `${framework}/${example}/index.html`,
+          template: `./src/${framework}/${example}/index.html`,
+          chunks: [`${framework}-${example}`],
+        })
+      )
+    ),
+
   ],
 
   resolve: {
-    extensions: ['.ts', '.tsx', '.js']
+    extensions: [".ts", ".tsx", ".js"],
   },
-}
+};
