@@ -1,8 +1,8 @@
 import * as d3 from 'd3';
-import data from './data.json';
+import rawData from './data.json';
 
 const timeParser = d3.timeParse("%b %d %Y");
-data = data.map((d) => {
+const data = rawData.map((d) => {
     return {
         "date": timeParser(d.date),
         "price": +d.price
