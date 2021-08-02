@@ -9,28 +9,20 @@ const data = rawData.map((d) => {
     }
 })
 
-const width = 700,
-    height = 450;
-
-const topBox = {
+const width = 700;
+const height = 450;
+const topLayoutBox = {
     x: 0,
     y: 0,
     height: height * 0.7,
     width: width,
-    margin: { top: 30, right: 10, bottom: 50, left: 70 },
 }
-topBox.innerHeight = topBox.height - topBox.margin.top - topBox.margin.bottom;
-topBox.innerWidth = topBox.width - topBox.margin.left - topBox.margin.right;
-
-const bottomBox = {
+const bottomLayoutBox = {
     x: 0,
-    y: topBox.height,
-    height: height - topBox.height,
+    y: topLayoutBox.height,
+    height: height - topLayoutBox.height,
     width: width,
-    margin: { top: 30, right: 10, bottom: 50, left: 70 },
 }
-bottomBox.innerHeight = bottomBox.height - bottomBox.margin.top - bottomBox.margin.bottom;
-bottomBox.innerWidth = bottomBox.width - bottomBox.margin.left - bottomBox.margin.right;
 
 
 const svg = d3.select("#canvas")
@@ -38,30 +30,34 @@ const svg = d3.select("#canvas")
     .attr("height", height);
 const groupTop = svg.append("g")
     .classed("groupTop", true)
-    .attr("transform", `translate(${topBox.x}, ${topBox.y})`);
+    .attr("transform", `translate(${topLayoutBox.x}, ${topLayoutBox.y})`);
 const groupBottom = svg.append("g")
     .classed("groupBottom", true)
-    .attr("transform", `translate(${bottomBox.x}, ${bottomBox.y})`);
+    .attr("transform", `translate(${bottomLayoutBox.x}, ${bottomLayoutBox.y})`);
 
 const dateDomain = d3.extent(data, d => d.date);
 const priceDomain = [0, d3.max(data, (d) => d.price)];
 
 
-const redraw = renderTop(groupTop, topBox, data);
-renderBottom(groupBottom, bottomBox, data, redraw);
+const redraw = renderTop(groupTop, topLayoutBox, data);
+renderBottom(groupBottom, bottomLayoutBox, data, redraw);
 
-function renderTop(root, box, data) {
-    const mainGroup = root.append("g").classed("main", true).attr("transform", `translate(${box.margin.left}, ${box.margin.top})`);
-    const axisXGroup = root.append("g").classed("axisX", true).attr("transform", `translate(${box.margin.left}, ${box.margin.top + box.innerHeight})`);
-    const axisYGroup = root.append("g").classed("axisY", true).attr("transform", `translate(${box.margin.left}, ${box.margin.top})`);
+function renderTop(root, layoutBox, data) {
+    const margin = { top: 30, right: 10, bottom: 50, left: 70 };
+    const innerHeight = layoutBox.height - margin.top - margin.bottom;
+    const innerWidth = layoutBox.width - margin.left - margin.right;
+
+    const mainGroup = root.append("g").classed("main", true).attr("transform", `translate(${margin.left}, ${margin.top})`);
+    const axisXGroup = root.append("g").classed("axisX", true).attr("transform", `translate(${margin.left}, ${margin.top + innerHeight})`);
+    const axisYGroup = root.append("g").classed("axisY", true).attr("transform", `translate(${margin.left}, ${margin.top})`);
 
     const scaleX = d3.scaleTime()
         .domain(dateDomain)
-        .range([0, box.innerWidth])
+        .range([0, innerWidth])
         .clamp(true);
     const scaleY= d3.scaleLinear()
         .domain(priceDomain)
-        .range([box.innerHeight, 0])
+        .range([innerHeight, 0])
         .nice();
 
     const areaGenerator= d3.area()
@@ -85,16 +81,20 @@ function renderTop(root, box, data) {
 }
 
 
-function renderBottom(root, box, data, redraw) {
-    const mainGroup = root.append("g").classed("main", true).attr("transform", `translate(${box.margin.left}, ${box.margin.top})`);
-    const axisXGroup = root.append("g").classed("axisX", true).attr("transform", `translate(${box.margin.left}, ${box.margin.top + box.innerHeight})`);
+function renderBottom(root, layoutBox, data, redraw) {
+    const margin = { top: 30, right: 10, bottom: 50, left: 70 };
+    const innerHeight = layoutBox.height - margin.top - margin.bottom;
+    const innerWidth = layoutBox.width - margin.left - margin.right;
+
+    const mainGroup = root.append("g").classed("main", true).attr("transform", `translate(${margin.left}, ${margin.top})`);
+    const axisXGroup = root.append("g").classed("axisX", true).attr("transform", `translate(${margin.left}, ${margin.top + innerHeight})`);
 
     const scaleX= d3.scaleTime()
         .domain(dateDomain)
-        .range([0, box.innerWidth]);
+        .range([0, innerWidth]);
     const scaleY= d3.scaleLinear()
         .domain(priceDomain)
-        .range([box.innerHeight, 0])
+        .range([innerHeight, 0])
         .nice();
 
     const areaGenerator= d3.area()
@@ -114,7 +114,7 @@ function renderBottom(root, box, data, redraw) {
     }
     const brush = d3.brushX()
         .handleSize(10)
-        .extent([[0, 0], [width, box.innerHeight]])
+        .extent([[0, 0], [innerWidth, innerHeight]])
         .on("brush", brushed);
     mainGroup.call(brush);
 }
