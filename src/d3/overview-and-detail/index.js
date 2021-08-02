@@ -12,10 +12,6 @@ const data = rawData.map((d) => {
 const width = 700,
     height = 450;
 
-const svg = d3.select("#canvas")
-    .attr("width", width)
-    .attr("height", height);
-
 const topBox = {
     x: 0,
     y: 0,
@@ -36,6 +32,10 @@ const bottomBox = {
 bottomBox.innerHeight = bottomBox.height - bottomBox.margin.top - bottomBox.margin.bottom;
 bottomBox.innerWidth = bottomBox.width - bottomBox.margin.left - bottomBox.margin.right;
 
+
+const svg = d3.select("#canvas")
+    .attr("width", width)
+    .attr("height", height);
 const groupTop = svg.append("g")
     .classed("groupTop", true)
     .attr("transform", `translate(${topBox.x}, ${topBox.y})`);

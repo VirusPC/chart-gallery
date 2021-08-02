@@ -136,6 +136,8 @@ function drawLegend(g, width, height, zScale, zField) {
         .attr("cy", d => legendScale(d))
         .attr("r", circleSize)
         .attr("fill", d => zScale(d));
-    
-    
+}
+
+function drawTimeline(data) {
+    f
 }
