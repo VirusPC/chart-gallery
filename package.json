@@ -15,6 +15,7 @@
     "d3": "^6.2.0",
     "d3-sankey": "^0.12.3",
     "lodash": "^4.17.20",
+    "rough-viz": "^1.0.6",
     "webpack-merge": "^4.2.2"
   },
   "devDependencies": {

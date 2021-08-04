@@ -1,4 +1,4 @@
-const frameworks = ['D3', 'Vega', 'Vega-Lite', 'AntV', 'Echarts'];
+const frameworks = ['D3', 'Vega', 'Vega-Lite', 'AntV', 'Echarts', 'RoughViz'];
 
 const InsertPoints = {};
 frameworks.forEach(framework => {
