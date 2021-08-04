@@ -4,7 +4,7 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Advanced Interaction with Multiple Viewsn</title>
+    <title>Advanced Interaction with Multiple View</title>
     <style>
 
     </style>
@@ -16,119 +16,6 @@
     <br>
     <br>
     <br>
-    <script src="https://d3js.org/d3.v6.min.js"></script>
-    <script src="https://d3js.org/d3-hexbin.v0.2.min.js"></script>
-    <script>
-
-        const dataCrimeFiltered = [];
-
-        d3.json("./vanAreas.geojson").then((dataAreas) => {
-            d3.json("./vanCrime.geojson").then((dataCrime) => {
-                const width = 800,
-                    height = 500;
-                const svg = d3.select("body").append("svg")
-                    .attr("width", width)
-                    .attr("height", height)
-                    .attr("viewbox", `0 0 width height`);
-                svg.append("defs").append("filter")
-                    .attr("id", "f1")
-                    .attr("x", 0)
-                    .attr("y", 0)
-                    .append("feGaussianBlur")
-                        .attr("in", "SourceGraphic")
-                        .attr("stdDeviation", 5)
-                const groupMap = svg.append("g").attr("class", "map");
-                renderMap(groupMap, dataAreas, dataCrime);
-            });
-        });
-
-
-        function renderMap(root, dataAreas, dataCrime) {
-            const projection = d3.geoMercator()
-                .center(d3.geoCentroid(dataAreas))
-                .scale(150000);
-
-            const groupCrime = root.append("g")
-                .attr("class", "crime")
-                .style("filter", "url(#f1)");
-            const groupAreas = root.append("g").attr("class", "areas");
-
-            renderAreas(groupAreas, dataAreas, projection);
-            renderCrimeInstances(groupCrime, dataCrime, projection);
-
-            const zoom = d3.zoom()
-                .scaleExtent([0.5, 3])
-                //.duration(1000)
-                //.translateExtent([[-124, 56], [-123, 48]])
-                .on('zoom', zoomed);
-            function zoomed(e) {
-                console.log(e.transform);
-                groupAreas.attr('transform', e.transform);
-                groupCrime.attr('transform', e.transform);
-            }
-            root.call(zoom);
-        }
-
-
-        function renderAreas(root, data, projection) {
-            const geoPathGenerator = d3.geoPath()
-                .projection(projection);
-            const colorRegionStroke = "#8c8c8c";
-            const colorRegionNormal = "#ddd";
-            const colorRegionHighlight = "#000";
-
-            root.attr("opacity", 1)
-                .selectAll("path")
-                .data(data.features)
-                .enter()
-                .append("path")
-                .attr("d", geoPathGenerator)
-                .attr("fill", colorRegionNormal)
-                .attr("fill-opacity", 0.3)
-                .attr("stroke", colorRegionStroke)
-                .on("mouseover", function () {
-                    d3.select(this)
-                        .attr("fill", colorRegionHighlight);
-                })
-                .on("mouseout", function () {
-                    d3.select(this).attr("fill", colorRegionNormal);
-                })
-                .on("click", () => {console.log("clicked")});
-        }
-
-
-        function renderCrimeInstances(root, data, projection) {
-            const geoPathGenerator = d3.geoPath()
-                .projection(projection);
-            const projectedData = data.features.map(d => [d.properties.lng, d.properties.lat]).map(projection);
-            const hexbin =d3.hexbin()
-                .extent([[0, 0], [800, 500]])
-                .radius(9);
-            const dataBined = hexbin(projectedData);
-
-            //const scaleColor = d3.scaleSequential()
-            //const scaleColor = d3.scaleSequentialSqrt()
-            const scaleColor = d3.scaleSequentialSymlog()
-            //const scaleColor = d3.scaleSequentialLog()
-                .domain(d3.extent(dataBined, d => d.length))
-                .interpolator(d3.interpolateBlues);
-                //.interpolator(d3.interpolateSpectral);
-
-            const radius = d3.scaleSqrt([0, d3.max(dataBined, d => d.length)], [0, hexbin.radius() * Math.SQRT2])
-            
-            root.append("g")
-                //.attr("opacity", 1)
-                .selectAll("path")
-                .data(dataBined)
-                .join("path")
-                .attr("transform", d => `translate(${d.x},${d.y})`)
-                .attr("d", d => hexbin.hexagon(hexbin.radius()))
-                //.attr("d", d => hexbin.hexagon(radius(d.length)))
-                .attr("fill", d => scaleColor(d.length))
-
-        }
-
-    </script>
 </body>
 
 </html>

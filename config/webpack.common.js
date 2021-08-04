@@ -38,6 +38,11 @@ module.exports = {
     rules: [
       // rules中每一个对象就是一个loader
       {
+        // 默认只解析json, 需要添加geojson支持
+        test: /.(geojson)$/i,
+        loader: 'json-loader'
+      },
+      {
         // css
         test: /\.css$/i,
         use: [
@@ -116,6 +121,6 @@ module.exports = {
   ],
 
   resolve: {
-    extensions: [".ts", ".tsx", ".js"],
+    extensions: [".ts", ".tsx", ".js", ".json", ".geojson"],
   },
 };
