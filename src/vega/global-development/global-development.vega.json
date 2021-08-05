@@ -1,0 +1,414 @@
+{
+  "$schema": "https://vega.github.io/schema/vega/v5.json",
+  "width": 600,
+  "height": 450,
+  "padding": 5,
+  "autosize": "pad",
+  "data": [
+    {
+      "name": "dataRoot",
+      "values": "wait for insert",
+      "transform": [
+        {
+          "type": "project",
+          "fields": ["year", "country", "cluster", "life_expect", "fertility"],
+          "as": ["year", "country", "cluster", "lifeExpect", "fertility"]
+        },
+        {"type": "collect", "sort": {"field": "year"}}
+      ]
+    },
+    {
+      "name": "clusters",
+      "values": [
+        {"id": 0, "name": "South Asia"},
+        {"id": 1, "name": "Europe & Central Asia"},
+        {"id": 2, "name": "Sub-Saharan Africa"},
+        {"id": 3, "name": "America"},
+        {"id": 4, "name": "East Asia & Pacific"},
+        {"id": 5, "name": "Middle East & North Africa"}
+      ]
+    },
+    {
+      "name": "dataEmphasized",
+      "on": [
+        {
+          "trigger": "signalDataClicked",
+          "toggle": "{country: signalDataClicked.country}"
+        }
+      ]
+    },
+    {
+      "name": "dataTimeline",
+      "source": "dataRoot",
+      "transform": [
+        {
+          "type": "filter",
+          "expr": " datum.country == signalDataCurrentCountry.country "
+        }
+      ]
+    },
+    {
+      "name": "dataTimelineWithDistance",
+      "source": "dataTimeline",
+      "transform": [
+        {
+          "type": "formula",
+          "as": "x",
+          "expr": "scale('scaleX', datum.fertility)"
+        },
+        {
+          "type": "formula",
+          "as": "y",
+          "expr": "scale('scaleY', datum.lifeExpect)"
+        },
+        {
+          "type": "formula",
+          "as": "distance",
+          "expr": "sqrt(pow((datum.x - signalMousePosition.x), 2) + pow((datum.y - signalMousePosition.y), 2))"
+        }
+      ]
+    },
+    {
+      "name": "dataParams",
+      "source": "dataTimelineWithDistance",
+      "transform": [
+        {"type": "formula", "expr": "datum.year + 5", "as": "nextYear"},
+        {
+          "type": "lookup",
+          "from": "dataTimelineWithDistance",
+          "key": "year",
+          "fields": ["nextYear"],
+          "values": ["distance"],
+          "as": ["distanceNext"],
+          "default": 10000
+        },
+        {
+          "type": "formula",
+          "expr": "datum.distance + datum.distanceNext",
+          "as": "distSum"
+        },
+        {
+          "type": "joinaggregate",
+          "fields": ["distSum"],
+          "ops": ["min"],
+          "as": ["minDistSum"]
+        },
+        {"type": "filter", "expr": "datum.distSum == datum.minDistSum"},
+        {
+          "type": "formula",
+          "expr": "datum.distance / datum.distSum",
+          "as": "weight"
+        },
+        {
+          "type": "project",
+          "fields": ["year", "nextYear", "weight"],
+          "as": ["preYear", "nextYear", "weight"]
+        }
+      ]
+    },
+    {
+      "name": "dataPYear",
+      "source": "dataRoot",
+      "transform": [{"type": "filter", "expr": "false"}]
+    },
+    {
+      "name": "dataPreYear",
+      "source": "dataRoot",
+      "transform": [{"type": "filter", "expr": "datum.year == signalPreYear"}]
+    },
+    {
+      "name": "dataNextYear",
+      "source": "dataRoot",
+      "transform": [{"type": "filter", "expr": "datum.year == signalNextYear"}]
+    },
+    {
+      "name": "dataCurrent",
+      "source": "dataPreYear",
+      "transform": [
+        {
+          "type": "lookup",
+          "from": "dataNextYear",
+          "key": "country",
+          "fields": ["country"],
+          "values": ["lifeExpect", "fertility"],
+          "as": ["nextLifeExpect", "nextFertility"]
+        },
+        {
+          "type": "formula",
+          "expr": "datum.lifeExpect * (1 - signalWeight) + datum.nextLifeExpect * signalWeight",
+          "as": "curLifeExpect"
+        },
+        {
+          "type": "formula",
+          "expr": "datum.fertility * (1-signalWeight) + datum.nextFertility * signalWeight",
+          "as": "curFertility"
+        },
+        {
+          "type": "project",
+          "fields": [
+            "year",
+            "country",
+            "cluster",
+            "curLifeExpect",
+            "curFertility"
+          ],
+          "as": ["year", "country", "cluster", "lifeExpect", "fertility"]
+        }
+      ]
+    },
+    {
+      "name": "dataCurrentTimeCurrentCountry",
+      "source": "dataCurrent",
+      "transform": [
+        {
+          "type": "filter",
+          "expr": "datum.country == signalDataCurrentCountry.country"
+        }
+      ]
+    }
+  ],
+  "signals": [
+    {
+      "name": "signalDataHovered",
+      "value": "{}",
+      "on": [
+        {"events": "@circles: mouseover", "update": "datum"},
+        {"events": "@circles: mouseout", "update": "{}"}
+      ]
+    },
+    {
+      "name": "signalDataClicked",
+      "description": "mouseup can happen at anywhere",
+      "value": null,
+      "on": [
+        {"events": "@circles: mousedown", "update": "datum"},
+        {"events": "mouseup", "update": "null"}
+      ]
+    },
+    {
+      "name": "signalDataCurrentCountry",
+      "update": "signalDataClicked || signalDataHovered"
+    },
+    {
+      "name": "signalMousePosition",
+      "value": "{}",
+      "on": [
+        {
+          "events": "[@circles:mousedown, mouseup] > mousemove",
+          "update": "{x: x(), y: y()}"
+        },
+        {"events": "mouseup", "update": "{}"}
+      ]
+    },
+    {
+      "name": "signalParams",
+      "value": "[{preYear: 1955, nextYear:1960, weight: 0}]",
+      "update": "data('dataParams')"
+    },
+    {
+      "name": "signalTimelineWithDistance",
+      "update": "signalMousePosition!={}? data('dataTimelineWithDistance')[0] : 'hello'"
+    },
+    {
+      "name": "signalPreYear",
+      "value": "1955",
+      "update": "signalParams[0]? signalParams[0].preYear : signalPreYear"
+    },
+    {
+      "name": "signalNextYear",
+      "value": "1960",
+      "update": "signalParams[0]? signalParams[0].nextYear : signalNextYear"
+    },
+    {
+      "name": "signalWeight",
+      "value": "0",
+      "update": "signalParams[0]? signalParams[0].weight : signalWeight"
+    },
+    {
+      "name": "signalCurYear",
+      "value": 1955,
+      "update": "signalWeight? (signalWeight>0.5? signalNextYear: signalPreYear): signalCurYear"
+    }
+  ],
+  "scales": [
+    {
+      "name": "scaleX",
+      "type": "linear",
+      "domain": {"data": "dataRoot", "field": "fertility"},
+      "range": "width",
+      "nice": true
+    },
+    {
+      "name": "scaleY",
+      "type": "linear",
+      "domain": {"data": "dataRoot", "field": "lifeExpect"},
+      "range": "height",
+      "nice": true,
+      "zero": false
+    },
+    {
+      "name": "scaleClusterColor",
+      "type": "ordinal",
+      "domain": {"data": "dataRoot", "field": "cluster"},
+      "range": "category"
+    },
+    {
+      "name": "scaleLegendsLabel",
+      "type": "ordinal",
+      "domain": {"data": "clusters", "field": "id"},
+      "range": {"data": "clusters", "field": "name"}
+    }
+  ],
+  "axes": [
+    {
+      "scale": "scaleX",
+      "title": "Fertility",
+      "orient": "bottom",
+      "grid": true,
+      "tickCount": 5
+    },
+    {
+      "scale": "scaleY",
+      "title": "Life Expectancy",
+      "orient": "left",
+      "grid": true,
+      "tickCount": 5
+    }
+  ],
+  "legends": [
+    {
+      "type": "symbol",
+      "direction": "vertical",
+      "orient": "right",
+      "fill": "scaleClusterColor",
+      "title": "Region",
+      "encode": {
+        "labels": {
+          "interactive": true,
+          "update": {"text": {"field": "value", "scale": "scaleLegendsLabel"}}
+        },
+        "symbols": {"update": {"opacity": {"value": 0.5}}}
+      }
+    }
+  ],
+  "marks": [
+    {
+      "name": "markTimeline",
+      "type": "line",
+      "from": {"data": "dataTimeline"},
+      "encode": {
+        "enter": {
+          "interpolate": {"value": "linear"},
+          "strokeCap": {"value": "butt"},
+          "x": {"field": "fertility", "scale": "scaleX"},
+          "y": {"field": "lifeExpect", "scale": "scaleY"},
+          "stroke": {"value": "#bbb"},
+          "strokeWidth": {"value": 6},
+          "opacity": {"value": 0.5}
+        }
+      }
+    },
+    {
+      "name": "markYear",
+      "type": "text",
+      "encode": {
+        "enter": {
+          "x": {"signal": "width / 2"},
+          "y": {"signal": "height"},
+          "baseline": {"value": "bottom"},
+          "fill": {"value": "grey"},
+          "fontSize": {"value": 150},
+          "fontWeight": {"value": 300},
+          "opacity": {"value": 0.4}
+        },
+        "update": {"text": {"signal": "signalCurYear"}}
+      }
+    },
+    {
+      "name": "labelsOfTimeline",
+      "type": "text",
+      "from": {"data": "dataTimeline"},
+      "encode": {
+        "enter": {
+          "x": {"field": "fertility", "scale": "scaleX"},
+          "y": {"field": "lifeExpect", "scale": "scaleY"},
+          "text": {"field": "year"},
+          "baseline": {"value": "bottom"},
+          "fill": {"value": "grey"},
+          "fontSize": {"value": 10},
+          "fontWeight": {"value": 300},
+          "opacity": {"value": 0.7}
+        }
+      }
+    },
+    {
+      "name": "labelHoveredCountry",
+      "type": "text",
+      "from": {"data": "dataCurrentTimeCurrentCountry"},
+      "encode": {
+        "enter": {
+          "align": {"value": "center"},
+          "baseline": {"value": "bottom"},
+          "dy": {"value": -7},
+          "fontSize": {"value": 10},
+          "fontWeight": {"value": 500}
+        },
+        "update": {
+          "x": {"field": "fertility", "scale": "scaleX"},
+          "y": {"field": "lifeExpect", "scale": "scaleY"},
+          "text": {"field": "country"}
+        }
+      }
+    },
+    {
+      "name": "labelCountriesEmphasized",
+      "type": "text",
+      "from": {"data": "dataCurrent"},
+      "encode": {
+        "update": {
+          "x": {"field": "fertility", "scale": "scaleX"},
+          "y": {"field": "lifeExpect", "scale": "scaleY"},
+          "text": [
+            {
+              "test": "indata('dataEmphasized', 'country', datum.country)",
+              "field": "country"
+            }
+          ],
+          "align": {"value": "center"},
+          "baseline": {"value": "bottom"},
+          "dy": {"value": -7},
+          "fontSize": {"value": 10},
+          "fontWeight": {"value": 500}
+        }
+      }
+    },
+    {
+      "name": "circles",
+      "type": "symbol",
+      "from": {"data": "dataCurrent"},
+      "encode": {
+        "enter": {
+          "size": {"value": 100},
+          "fill": {"field": "cluster", "scale": "scaleClusterColor"},
+          "shape": {"value": "circle"}
+        },
+        "update": {
+          "xc": {"field": "fertility", "scale": "scaleX"},
+          "yc": {"field": "lifeExpect", "scale": "scaleY"},
+          "opacity": [
+            {
+              "test": "datum.country == signalDataCurrentCountry.country",
+              "value": 1
+            },
+            {
+              "test": "indata('dataEmphasized', 'country', datum.country)",
+              "value": 1
+            },
+            {"value": 0.5}
+          ]
+        }
+      }
+    }
+  ],
+  "config": {}
+}
