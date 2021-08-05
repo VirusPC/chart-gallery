@@ -76,6 +76,16 @@ module.exports = {
         use: "ts-loader",
         exclude: /node_modules/,
       },
+      {
+        // 使得import/require可以导入相应后缀的文件, 转化成url.
+        test: /\.csv$/i,
+        loader: "file-loader", //  resolves import/require() on a file into a url and emits the file into the output directory.
+        options: {
+          outputPath: "data",
+        },
+      },{
+
+      }
       // {
       //   test: /(\.m?js$) | (\.ts$)/,
       //   exclude: /node_modules/,
