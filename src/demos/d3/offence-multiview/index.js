@@ -1,7 +1,7 @@
 import * as d3 from 'd3';
 import { hexbin } from 'd3-hexbin';
-import dataAreas from './vanAreas.json'
-import dataCrime from './vanCrime.json'
+import dataAreas from '/src/data/offence/vanAreas.json'
+import dataCrime from '/src/data/offence/vanCrime.json'
 //d3.hexbin = hexbin;
 const dataCrimeFiltered = [];
 

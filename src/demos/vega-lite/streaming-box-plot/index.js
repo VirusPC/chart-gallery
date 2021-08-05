@@ -1,7 +1,7 @@
 import vegaEmbed from "vega-embed";
 import * as d3 from "d3";
 import spec from "./specification.vl.json";
-import penguinsURL from "./penguins_size.csv";
+import penguinsURL from "/src/data/penguins_size.csv";
 //import "./index.css"
 
 vegaEmbed("#container", spec).then((res) => {

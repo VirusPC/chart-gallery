@@ -1,5 +1,5 @@
 import * as d3 from "d3";
-import cars from "./cars.json";
+import cars from "/src/data/cars.json";
 
 main();
 

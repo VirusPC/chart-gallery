@@ -1,6 +1,6 @@
 import * as vega from 'vega'
 import spec from './global-development.vega.json'
-import data from './gapminder.json'
+import data from '/src/data/global-development/gapminder.json'
 
 spec.data.find((d) => d.name === 'dataRoot').values = data;
 

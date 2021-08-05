@@ -30,16 +30,16 @@ module.exports = function (plop) {
         }],
         actions: (answers) => [{
             type: 'add',
-            path: 'src/{{kebabCase framework}}/{{kebabCase name}}/index.js'
+            path: 'src/demos/{{kebabCase framework}}/{{kebabCase name}}/index.js'
         },{
             type: 'add',
-            path: 'src/{{kebabCase framework}}/{{kebabCase name}}/index.html',
+            path: 'src/demos/{{kebabCase framework}}/{{kebabCase name}}/index.html',
             templateFile: 'templates/demo-template.hbs'
         },{
             type: 'modify',
             path: 'src/index.html',
             pattern: `<!-- ${answers.framework} Insert Point -->`,
-            template: `<li><a href="./{{kebabCase framework}}/{{kebabCase name}}/index.html">{{titleCase name}}</a></li>
+            template: `<li><a href="./demos/{{kebabCase framework}}/{{kebabCase name}}/index.html">{{titleCase name}}</a></li>
         <!-- ${answers.framework} Insert Point -->`
         }]
     })

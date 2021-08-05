@@ -2,7 +2,7 @@ const path = require("path");
 const fs = require("fs");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 
-const dirPath = path.resolve(__dirname, "../src");
+const dirPath = path.resolve(__dirname, "../src/demos");
 const examples = {};
 fs.readdirSync(dirPath)
   .filter((item) => fs.statSync(path.resolve(dirPath, item)).isDirectory())
@@ -17,7 +17,7 @@ console.log("Example List", examples);
 
 let entryObj = {};
 for(const framework of Object.keys(examples)){
-  examples[framework].forEach((example) => entryObj[`${framework}-${example}`] = "./" + path.join("./src", framework, example,"index.js"))
+  examples[framework].forEach((example) => entryObj[`${framework}-${example}`] = "./" + path.join("./src/demos", framework, example,"index.js"))
 }
 console.log(entryObj);
 
@@ -121,8 +121,8 @@ module.exports = {
     ...Object.keys(examples).flatMap(
       (framework) => examples[framework].map(example =>
         new HtmlWebpackPlugin({
-          filename: `${framework}/${example}/index.html`,
-          template: `./src/${framework}/${example}/index.html`,
+          filename: `demos/${framework}/${example}/index.html`,
+          template: `./src/demos/${framework}/${example}/index.html`,
           chunks: [`${framework}-${example}`],
         })
       )

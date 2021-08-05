@@ -1,5 +1,5 @@
-import rawData from './gapminder.json'
-import clusters from './clusters.json'
+import rawData from '/src/data/global-development/gapminder.json'
+import clusters from '/src/data/global-development/clusters.json'
 import * as d3 from 'd3';
 
 const clustersDict = {};
