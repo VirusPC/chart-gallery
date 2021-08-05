@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/VirusPC/chart-gallery"
+  },
   "scripts": {
     "start": "webpack serve --config ./config/webpack.dev.js",
     "build": "webpack --config ./config/webpack.prod.js",
@@ -16,6 +20,8 @@
     "d3-hexbin": "^0.2.2",
     "d3-sankey": "^0.12.3",
     "lodash": "^4.17.20",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
     "rough-viz": "^1.0.6",
     "webpack-merge": "^4.2.2"
   },
