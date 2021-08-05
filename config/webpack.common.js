@@ -132,5 +132,8 @@ module.exports = {
 
   resolve: {
     extensions: [".ts", ".tsx", ".js", ".json", ".geojson"],
+    alias: {
+      data: path.resolve(__dirname, "../src/data"),
+    }
   },
 };
