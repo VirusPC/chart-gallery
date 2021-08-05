@@ -39,7 +39,7 @@ module.exports = {
       // rules中每一个对象就是一个loader
       {
         // 默认只解析json, 需要添加geojson支持
-        test: /.(geojson)$/i,
+        test: /\.(geojson)$/i,
         loader: 'json-loader'
       },
       {
