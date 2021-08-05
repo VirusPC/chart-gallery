@@ -38,7 +38,7 @@ module.exports = {
     rules: [
       // rules中每一个对象就是一个loader
       {
-        // 默认只解析json, 需要添加geojson支持
+        // 默认只解析json, 需要添加geojson支持....然而本地跑没问题, vercel那边会报错...
         test: /\.geojson$/,
         loader: 'json-loader'
       },
