@@ -264,8 +264,8 @@ function renderScatterPlot(
 
   // layout
   const margin = { top: 10, right: 100, bottom: 40, left: 60 };
-  width -= margin.left + margin.right;
-  height -= margin.top + margin.bottom;
+  const innerWidth = width - margin.left - margin.right;
+  const innerHeight = height - margin.top - margin.bottom;
 
   // data manipulation
   data = data.filter((d) => !!(d[fieldX] && d[fieldY]));
@@ -281,13 +281,13 @@ function renderScatterPlot(
   const scaleX = d3
     .scaleLinear()
     .domain(extentX)
-    .range([0, width])
+    .range([0, innerWidth])
     .nice()
     .clamp(true);
   const scaleY = d3
     .scaleLinear()
     .domain(extentY)
-    .range([height, 0])
+    .range([innerHeight, 0])
     .nice()
     .clamp(true);
   const scaleColor = d3
@@ -299,7 +299,7 @@ function renderScatterPlot(
   const groupAxisX = root
     .append("g")
     .attr("class", "groupAxisX")
-    .attr("transform", `translate(${margin.left}, ${margin.top + height})`);
+    .attr("transform", `translate(${margin.left}, ${margin.top + innerHeight})`);
   const groupAxisY = root
     .append("g")
     .attr("class", "groupAxisY")
@@ -309,12 +309,12 @@ function renderScatterPlot(
     .attr("class", "title")
     .attr(
       "transform",
-      `translate(${margin.left + width / 2}, ${margin.top + height})`
+      `translate(${margin.left + innerWidth / 2}, ${margin.top + innerHeight})`
     );
   const groupLegends = root
     .append("g")
     .attr("class", "groupLegends")
-    .attr("transform", `translate(${margin.left + width}, ${margin.top})`);
+    .attr("transform", `translate(${margin.left + innerWidth}, ${margin.top})`);
   const groupTooltip = root
     .append("g")
     .attr("class", "tooltip")
@@ -328,7 +328,7 @@ function renderScatterPlot(
         .selectAll(".tick line")
         .clone()
         .attr("stroke-opacity", 0.1)
-        .attr("y2", -height)
+        .attr("y2", -innerHeight)
     )
     .append("text")
     .text(fieldX)
@@ -336,7 +336,7 @@ function renderScatterPlot(
     .attr("text-anchor", "middle")
     .attr("font-size", "12px")
     .attr("font-weight", "bold")
-    .attr("x", width / 2)
+    .attr("x", innerWidth / 2)
     .attr("y", 30);
   groupAxisY
     .call(d3.axisLeft(scaleY))
@@ -345,10 +345,10 @@ function renderScatterPlot(
         .selectAll(".tick line")
         .clone()
         .attr("stroke-opacity", 0.1)
-        .attr("x2", width)
+        .attr("x2", innerWidth)
     )
     .append("g")
-    .attr("transform", `translate(${-margin.left / 2 - 5}, ${height / 2})`)
+    .attr("transform", `translate(${-margin.left / 2 - 5}, ${innerHeight / 2})`)
     .append("text")
     .text(fieldY)
     .attr("fill", "black")
@@ -361,9 +361,9 @@ function renderScatterPlot(
   renderScatterLegends(
     groupLegends,
     margin.right,
-    height + margin.top + margin.left,
+    innerHeight + margin.top + margin.left,
+    scaleColor,
     fieldColor,
-    scaleColor
   );
 
   /*********** The first difference compared with using pure d3 *********/
@@ -390,7 +390,7 @@ function renderScatterPlot(
     .attr("class", "brushGroup")
     .attr("transform", `translate(${margin.left}, ${margin.top})`);
   const brush = d3.brush()
-    .extent([[0, 0], [width, height]])
+    .extent([[0, 0], [innerWidth, innerHeight]])
     .on("start brush end", onBrush);
   brush(brushGroup);
 
@@ -426,36 +426,34 @@ function renderScatterPlot(
  * @param {*} field 
  * @param {*} scaleColor 
  */
-function renderScatterLegends(root, width, height, field, scaleColor) {
+function renderScatterLegends(root, width, height, scaleColor, title) {
   // settings
   const radius = 4;
 
   // layout
   const margin = { top: 30, right: 50, bottom: (height / 6) * 5, left: 10 };
-  width -= margin.left + margin.right;
-  height -= margin.top + margin.bottom;
+  const innerWidth = width - margin.left - margin.right;
+  const innerHeight = height - margin.top - margin.bottom;
   // data manipulation
   const domain = scaleColor.domain();
 
   //scale
-  const scaleY = d3.scalePoint().domain(domain).range([height, 0]);
-
-  // groups
+  const scaleY = d3.scalePoint().domain(domain).range([innerHeight, 0]); // groups
   const groupTitle = root
     .append("g")
     .attr("class", "groupTitle")
-    .attr("transform", `translate(${margin.left + width / 2}, ${5})`);
+    .attr("transform", `translate(${margin.left + innerWidth / 2}, ${5})`);
   const groupAxisY = root
     .append("g")
     .attr("class", "groupAxisY")
-    .attr("transform", `translate(${margin.left + width}, ${margin.top})`);
+    .attr("transform", `translate(${margin.left + innerWidth}, ${margin.top})`);
   const groupMarks = root
     .append("g")
     .attr("class", "groupMarks")
     .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
   // draw
-  groupTitle.append("text").attr("text-anchor", "start").text(field);
+  groupTitle.append("text").attr("text-anchor", "start").text(title);
   groupAxisY
     .call(d3.axisRight(scaleY))
     .call((g) => g.selectAll(".domain").remove());
@@ -466,7 +464,7 @@ function renderScatterLegends(root, width, height, field, scaleColor) {
     .attr("fill", "none")
     .attr("stroke-width", 2)
     .attr("stroke", (d) => scaleColor(d))
-    .attr("cx", width / 2)
+    .attr("cx", innerWidth/ 2)
     .attr("cy", (d) => scaleY(d))
     .attr("r", radius);
 }
