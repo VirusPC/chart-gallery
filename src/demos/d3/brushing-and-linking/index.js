@@ -311,9 +311,9 @@ function renderScatterPlot(
       "transform",
       `translate(${margin.left + innerWidth / 2}, ${margin.top + innerHeight})`
     );
-  const groupLegends = root
+  const groupLegend = root
     .append("g")
-    .attr("class", "groupLegends")
+    .attr("class", "groupLegend")
     .attr("transform", `translate(${margin.left + innerWidth}, ${margin.top})`);
   const groupTooltip = root
     .append("g")
@@ -358,8 +358,8 @@ function renderScatterPlot(
     .style("writing-mode", "tb")
     .attr("transform", "rotate(180)");
 
-  renderScatterLegends(
-    groupLegends,
+  renderScatterLegend(
+    groupLegend,
     margin.right,
     innerHeight + margin.top + margin.left,
     scaleColor,
@@ -426,7 +426,7 @@ function renderScatterPlot(
  * @param {*} field 
  * @param {*} scaleColor 
  */
-function renderScatterLegends(root, width, height, scaleColor, title) {
+function renderScatterLegend(root, width, height, scaleColor, title) {
   // settings
   const radius = 4;
 

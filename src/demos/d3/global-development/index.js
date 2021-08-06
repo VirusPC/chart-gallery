@@ -116,7 +116,7 @@ function renderScatterPlot(root, BBox, data, fields, currentYear) {
     renderLegend(legendGroup, legendBBox, zScale, fields.z);
 }
 
-function renderLegend(g, BBox, zScale, zField) {
+function renderLegend(g, BBox, zScale, title) {
     const circleSize = 7;
     const margin = { top: 30, right: BBox.width - circleSize * 3 - 50, bottom: BBox.height * 2 / 3, left: 50 };
     const innerWidth = BBox.width - margin.left - margin.right;
@@ -129,7 +129,7 @@ function renderLegend(g, BBox, zScale, zField) {
     const legendScale = d3.scalePoint().domain(zScale.domain()).range([0, innerHeight]);
 
     titleGroup.append("text")
-        .text(zField)
+        .text(title)
         .attr("x", innerWidth / 2)
         .attr("fill", "black")
         .attr("stroke", "black")
