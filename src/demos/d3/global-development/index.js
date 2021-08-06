@@ -91,16 +91,14 @@ function renderScatterPlot(root, BBox, data, fields, currentYear) {
                 .attr("opacity", 0.3)
         });
     const yAxisBBox = yGroup.node().getBBox();
-    yGroup.append("text")
-        .attr("x", yAxisBBox.x)
-        .attr("y", innerHeight / 2)
+    yGroup
+    .append("text")
+        .attr("transform", `translate(${yAxisBBox.x}, ${innerHeight / 2}) rotate(-90) translate(0, -10)`)
         .attr("fill", "black")
         .attr("stroke", "black")
         .style("font-size", 15)
-        .style("writing-mode", "vertical-rl")
         .style("text-anchor", "middle")
-        .style("dominant-baseline", "hanging")
-        .text(fields.y)
+        .text(fields.y);
 
     mainGroup.selectAll("circle")
         .data(data.filter(d => d.year === currentYear))
