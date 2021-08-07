@@ -1,6 +1,6 @@
 import * as d3 from 'd3';
 import data from "Data/cars.json";
-import addExentricLabelingInteraction from './excentric-labeling';
+import addExentricLabelingInteraction from './add-excentric-labeling-interaction';
 
 const width = 800;
 const height = 500;
@@ -45,12 +45,13 @@ function renderUsingD3(rootElem, width, height) {
 }
 
 function renderScatterPlot(root, width, height, data, fieldX, fieldY, fieldColor) {
+  console.log("d", data);
   // settings
   const radius = 3;
   const fieldLabel = "Name";
   const interactionParams = {
-    lensRadius: 25, 
-    fontSize: 20, 
+    lensRadius: 20, 
+    fontSize: 12, 
     maxLabelsNum: 10,
   }; 
 
@@ -84,12 +85,12 @@ function renderScatterPlot(root, width, height, data, fieldX, fieldY, fieldColor
     .domain(valuesColor)
     .range(d3.schemeTableau10);
 
-  const coordinatesWithInfo = data.map(d => ({
-    x: scaleX(d[fieldX]),
-    y: scaleY(d[fieldY]),
-    color: scaleColor(d[fieldColor]),
-    label: d["Name"],
-  }))
+  // const coordinatesWithInfo = data.map(d => ({
+  //   x: scaleX(d[fieldX]),
+  //   y: scaleY(d[fieldY]),
+  //   color: scaleColor(d[fieldColor]),
+  //   label: d["Name"],
+  // }))
 
   // groups
   const groupAxisX = root.append("g")
@@ -124,13 +125,13 @@ function renderScatterPlot(root, width, height, data, fieldX, fieldY, fieldColor
         .attr("x2", innerWidth)
     );
   groupMain.selectAll("circle")
-    .data(coordinatesWithInfo)
+    .data(data)
     .join("circle")
     .attr("fill", "none")
     .attr("stroke-width", 1)
-    .attr("stroke", d => d["color"])
-    .attr("cx", d => d["x"])
-    .attr("cy", d => d["y"])
+    .attr("stroke", d => scaleColor(d[fieldColor]))
+    .attr("cx", d => scaleX(d[fieldX]))
+    .attr("cy", d => scaleY(d[fieldY]))
     .attr("r", radius)
 
   groupLegend.call(renderLegend, margin.right, height, scaleColor, fieldColor);
