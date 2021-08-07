@@ -26,7 +26,7 @@ type LayoutInfo = {
 export default function exentricLabeling(){
     let maxLabelsNum = 10;
     let radius = 20;
-    let verticallyCoherent = false;
+    let verticallyCoherent = true;
     let horizontallyCoherent = false;
     let rawInfos: RawInfo[] = [];
     let labelsSpace = 3;
@@ -54,6 +54,10 @@ export default function exentricLabeling(){
     };
     computeExentricLabelingLayout.horizontallyCoherent = (_: boolean) => {
         horizontallyCoherent= _;
+        return computeExentricLabelingLayout;
+    };
+    computeExentricLabelingLayout.radial= (_: boolean) => {
+        verticallyCoherent = !_;
         return computeExentricLabelingLayout;
     };
     computeExentricLabelingLayout.maxLabelsNum = (_: number) => {
