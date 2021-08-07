@@ -1,7 +1,7 @@
 type RawInfo = {
     x: number,
     y: number,
-    labelName: string,
+    //labelName: string,
     labelWidth: number,
     labelHeight: number
 }
@@ -11,7 +11,7 @@ type ControlPoint = { x: number, y: number }
 type LayoutInfo = {
     x: number,
     y: number,
-    name: string,
+    //name: string,
     left: boolean,
     controlPoints: ControlPoint[],
     labelBBox: {
@@ -23,15 +23,58 @@ type LayoutInfo = {
     rawInfo: RawInfo
 }
 
-export default function computeExentricLabelingLayout(rawInfos: RawInfo[], cx: number, cy: number, r: number, maxLabelsNum: number) {
-    const layoutInfos = initLayoutInfos(rawInfos.slice(0, maxLabelsNum));
-    computeStartPoints(layoutInfos);
-    computePointsOnLens(layoutInfos, cx, cy, r);
-    dividedIntoLeftOrRight(layoutInfos, cx, cy);
-    computeMiddlePoints(layoutInfos, cx, cy, r);
-    computeEndPoints(layoutInfos);
-    computeLabelBBox(layoutInfos);
-    return layoutInfos;
+export default function exentricLabeling(){
+    let maxLabelsNum = 10;
+    let radius = 20;
+    let verticallyCoherent = false;
+    let horizontallyCoherent = false;
+    let rawInfos: RawInfo[] = [];
+
+    function computeExentricLabelingLayout(cx: number, cy: number): LayoutInfo[]{
+        let filteredRawInfos = filterObjInLens(rawInfos, cx, cy, radius);
+        filteredRawInfos = filterObjWithMaxNumber(filteredRawInfos, maxLabelsNum);
+        const layoutInfos = initLayoutInfos(filteredRawInfos);
+        computeStartPoints(layoutInfos);
+        if(!verticallyCoherent){
+            computePointsOnLens(layoutInfos, cx, cy, radius);
+        }
+        dividedIntoLeftOrRight(layoutInfos, cx, cy);
+        computeMiddlePoints(layoutInfos, cx, cy, radius);
+        computeEndPoints(layoutInfos, cx, horizontallyCoherent);
+        computeLabelBBox(layoutInfos);
+        return layoutInfos;
+    }
+
+    computeExentricLabelingLayout.verticallyCoherent = (_: boolean) => {
+        verticallyCoherent = _;
+        return computeExentricLabelingLayout;
+    };
+    computeExentricLabelingLayout.horizontallyCoherent = (_: boolean) => {
+        horizontallyCoherent= _;
+        return computeExentricLabelingLayout;
+    };
+    computeExentricLabelingLayout.maxLabelsNum = (_: number) => {
+        maxLabelsNum = _;
+        return computeExentricLabelingLayout;
+    };
+    computeExentricLabelingLayout.radius = (_: number) => {
+        radius= _;
+        return computeExentricLabelingLayout;
+    };
+    computeExentricLabelingLayout.rawInfos = (_: RawInfo[]) => {
+        rawInfos = _;
+        return computeExentricLabelingLayout;
+    };
+
+    return computeExentricLabelingLayout;
+}
+
+function filterObjInLens(rawInfos: RawInfo[], cx: number, cy: number, r: number){
+    return rawInfos.filter(rawInfo => Math.sqrt((rawInfo.x - cx) ** 2 + (rawInfo.y - cy) ** 2) <= r);
+}
+
+function filterObjWithMaxNumber(rawInfos: RawInfo[], maxLabelsNum: number){
+    return rawInfos.slice(0, maxLabelsNum);
 }
 
 function initLayoutInfos(rawInfos: RawInfo[]): LayoutInfo[] {
@@ -39,10 +82,10 @@ function initLayoutInfos(rawInfos: RawInfo[]): LayoutInfo[] {
 }
 
 function initLayoutInfo(rawInfo: RawInfo): LayoutInfo {
-    const { x, y,  labelName, labelWidth, labelHeight } = rawInfo
+    const { x, y,  labelWidth, labelHeight } = rawInfo
     return {
         x, y,
-        name: labelName,
+        //name: labelName,
         controlPoints: [],
         left: true,
         labelBBox: {
@@ -103,7 +146,7 @@ function computeMiddlePoints(layoutInfos: LayoutInfo[], cx: number, cy: number, 
     }
 }
 
-function computeEndPoints(layoutInfos: LayoutInfo[]): void {
+function computeEndPoints(layoutInfos: LayoutInfo[], cx: number, horizontallyCoherent: boolean): void {
     const computeMaxLabelWidth = (layoutInfos: LayoutInfo[]) => Math.max(...layoutInfos.map(layoutInfo => layoutInfo.labelBBox.width));
     const layoutInfosLeft: LayoutInfo[] = [];
     const layoutInfosRight: LayoutInfo[] = [];
@@ -111,6 +154,7 @@ function computeEndPoints(layoutInfos: LayoutInfo[]): void {
 
     if (layoutInfosLeft.length > 0) computeOneSide(layoutInfosLeft, true);
     if (layoutInfosRight.length > 0) computeOneSide(layoutInfosRight, false);
+    if(horizontallyCoherent) moveHorizontally(layoutInfos);
 
     function computeOneSide(layoutInfosOneSide: LayoutInfo[], left: boolean) {
         const maxWidth = computeMaxLabelWidth(layoutInfosOneSide);
@@ -119,10 +163,16 @@ function computeEndPoints(layoutInfos: LayoutInfo[]): void {
             const middleControlPoint = layoutInfo.controlPoints[controlPointsNum - 1];
             const space = maxWidth - layoutInfo.labelBBox.width;
             layoutInfo.controlPoints.push({
-                x: middleControlPoint.x + (left ? -space : 0),
+                x: middleControlPoint.x + (left ? -(space) : 0),
                 y: middleControlPoint.y,
             })
         });
+    }
+    function moveHorizontally(layoutInfos: LayoutInfo[]){
+        layoutInfos.forEach(layoutInfo => {
+            const endControlPoint = layoutInfo.controlPoints[layoutInfo.controlPoints.length-1];
+            endControlPoint.x += layoutInfo.x - cx;
+        })
     }
 }
 

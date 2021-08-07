@@ -1,5 +1,5 @@
 import * as d3 from 'd3';
-import { colorSignalConfig } from 'vega-lite/build/src/config';
+import exentricLabeling from './exentric-labeing';
 import excentricLabeling from './exentric-labeing';
 
 /**
@@ -108,8 +108,13 @@ function renderLabelsAndLines(root, cx, cy, r, objs, maxLabelsNum, colorField, l
     }
     const rawInfos = getRawInfos(objs, colorField, labelField, colorScale);
     computeSizeOfLabels(rawInfos, root);
-    console.log(rawInfos)
-    const layoutInfos = excentricLabeling(rawInfos, cx, cy, r, maxLabelsNum);
+    const excentricLabelingComputer = exentricLabeling()
+        .verticallyCoherent(false)
+        .horizontallyCoherent(true)
+        .radius(r)
+        .maxLabelsNum(maxLabelsNum)
+        .rawInfos(rawInfos);
+    const layoutInfos = excentricLabelingComputer(cx, cy);
     //renderControlPointsForTest(root, layoutInfos)
     renderLines(root, layoutInfos);
     renderBBoxs(root, layoutInfos);
@@ -208,23 +213,6 @@ function renderTexts(root, layoutInfos) {
         .attr("x", layoutInfo => layoutInfo.labelBBox.x)
         .attr("y", layoutInfo => layoutInfo.labelBBox.y)
         .attr("dominant-baseline", "hanging")
-        .text(layoutInfo => layoutInfo.name)
+        .text(layoutInfo => layoutInfo.rawInfo.labelName)
     console.log(textGroup.selectAll("*").nodes().map(n => n.getBBox().height));
-}
-
-
-
-
-function getXYfromTransform(node) {
-    try {
-        const transform = node
-            .attr("transform")
-            .split("(")[1]
-            .split(")")[0]
-            .split(",")
-            .map((i) => parseFloat(i));
-        return transform;
-    } catch (e) {
-        return [0, 0];
-    }
 }

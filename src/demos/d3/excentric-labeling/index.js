@@ -127,6 +127,7 @@ function renderScatterPlot(root, width, height, data, fieldX, fieldY, fieldColor
   groupMain.selectAll("circle")
     .data(data)
     .join("circle")
+    .attr("opacity", 0.7)
     .attr("fill", "none")
     .attr("stroke-width", 1)
     .attr("stroke", d => scaleColor(d[fieldColor]))
