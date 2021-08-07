@@ -1,7 +1,6 @@
 type RawInfo = {
     x: number,
     y: number,
-    color: string,
     labelName: string,
     labelWidth: number,
     labelHeight: number
@@ -13,7 +12,6 @@ type LayoutInfo = {
     x: number,
     y: number,
     name: string,
-    color: string,
     left: boolean,
     controlPoints: ControlPoint[],
     labelBBox: {
@@ -21,7 +19,8 @@ type LayoutInfo = {
         y: number,
         width: number,
         height: number
-    }
+    },
+    rawInfo: RawInfo
 }
 
 export default function computeExentricLabelingLayout(rawInfos: RawInfo[], cx: number, cy: number, r: number, maxLabelsNum: number) {
@@ -31,6 +30,7 @@ export default function computeExentricLabelingLayout(rawInfos: RawInfo[], cx: n
     dividedIntoLeftOrRight(layoutInfos, cx, cy);
     computeMiddlePoints(layoutInfos, cx, cy, r);
     computeEndPoints(layoutInfos);
+    computeLabelBBox(layoutInfos);
     return layoutInfos;
 }
 
@@ -38,15 +38,17 @@ function initLayoutInfos(rawInfos: RawInfo[]): LayoutInfo[] {
     return rawInfos.map(initLayoutInfo);
 }
 
-function initLayoutInfo({ x, y, color, labelName, labelWidth, labelHeight }: RawInfo): LayoutInfo {
+function initLayoutInfo(rawInfo: RawInfo): LayoutInfo {
+    const { x, y,  labelName, labelWidth, labelHeight } = rawInfo
     return {
-        x, y, color,
+        x, y,
         name: labelName,
         controlPoints: [],
         left: true,
         labelBBox: {
             x: 0, y: 0, width: labelWidth, height: labelHeight,
         },
+        rawInfo: rawInfo
     }
 }
 
@@ -135,6 +137,6 @@ function computeLabelBBox(layoutInfos: LayoutInfo[]) {
         const bbox = layoutInfo.labelBBox;
         const lastControlPoint = layoutInfo.controlPoints[layoutInfo.controlPoints.length-1];
         bbox.x = lastControlPoint.x + (layoutInfo.left ? -bbox.width : 0);
-        bbox.y = lastControlPoint.y + (layoutInfo.labelBBox.height >> 1);
+        bbox.y = lastControlPoint.y - (layoutInfo.labelBBox.height >> 1);
     });
 }

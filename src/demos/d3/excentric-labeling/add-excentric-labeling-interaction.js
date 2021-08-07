@@ -1,4 +1,5 @@
 import * as d3 from 'd3';
+import { colorSignalConfig } from 'vega-lite/build/src/config';
 import excentricLabeling from './exentric-labeing';
 
 /**
@@ -78,7 +79,7 @@ export default function addExentricLabelingInteraction(root, width, height, colo
         const objs = searchObjectsInCircle(root, pointerPos[0], pointerPos[1], lensRadius);
         countLabel.text(objs.length);
         labelsGroup.selectAll("*").remove();
-        if(!objs || objs.length<=1) return;
+        if(!objs || objs.length<=0) return;
         labelsGroup.call(renderLabelsAndLines, pointerPos[0], pointerPos[1], lensRadius, objs, maxLabelsNum, colorField, labelField, colorScale);
     }
     function onMouseleave() {
@@ -107,10 +108,12 @@ function renderLabelsAndLines(root, cx, cy, r, objs, maxLabelsNum, colorField, l
     }
     const rawInfos = getRawInfos(objs, colorField, labelField, colorScale);
     computeSizeOfLabels(rawInfos, root);
+    console.log(rawInfos)
     const layoutInfos = excentricLabeling(rawInfos, cx, cy, r, maxLabelsNum);
-    renderControlPointsForTest(root, layoutInfos)
-    renderLines();
-    renderLabelsAndLines();
+    //renderControlPointsForTest(root, layoutInfos)
+    renderLines(root, layoutInfos);
+    renderBBoxs(root, layoutInfos);
+    renderTexts(root, layoutInfos);
 }
 
 function renderControlPointsForTest(root, objInfos){
@@ -148,7 +151,8 @@ function getRawInfos(objs, colorField, labelField, colorScale) {
 function computeSizeOfLabels(rawInfos, root) {
     const tempInfoAttr = "labelText";
     const tempClass = "temp" + String(new Date().getMilliseconds());
-    const tempMountPoint = d3.create("svg:g").attr("class", tempClass);
+    //const tempMountPoint = d3.create("svg:g").attr("class", tempClass);
+    const tempMountPoint = root.append("svg:g").attr("class", tempClass);
     rawInfos.forEach(rawInfo =>
         rawInfo[tempInfoAttr] = tempMountPoint.append("text")
             .attr("opacity", "0")
@@ -161,7 +165,7 @@ function computeSizeOfLabels(rawInfos, root) {
     rawInfos.forEach(rawInfo => {
         const labelBBox = rawInfo[tempInfoAttr].getBBox();
         rawInfo.labelWidth = labelBBox.width;
-        rawInfo.labelHeight = labelBBox.height;
+        rawInfo.labelHeight = 21;
     });
     root.select("." + tempClass).remove();
     rawInfos.forEach(rawInfo => delete rawInfo[tempInfoAttr]);
@@ -171,9 +175,43 @@ function renderTempLabels() { }
 
 function moveLabels() { }
 
-function renderLines() { }
+function renderLines(root, layoutInfos) { 
+    const lineGroup = root.append("g").attr("class", "exentric-labeling-line");
+    const lineGenerator = d3.line().x(d => d.x).y(d => d.y);
+    lineGroup.selectAll("path")
+        .data(layoutInfos)
+        .join("path")
+        .attr("fill", "none")
+        .attr("stroke", layoutInfo => layoutInfo.rawInfo.color)
+        .attr("d", layoutInfo => lineGenerator(layoutInfo.controlPoints))
+ }
 
-function renderBBoxs() { }
+function renderBBoxs(root, layoutInfos) {
+    const bboxGroup = root.append("g").attr("class", "exentric-labeling-bbox");
+    bboxGroup.selectAll("rect")
+        .data(layoutInfos)
+        .join("rect")
+        .attr("fill", "none")
+        .attr("stroke", layoutInfo => layoutInfo.rawInfo.color)
+        .attr("x", layoutInfo => layoutInfo.labelBBox.x)
+        .attr("y", layoutInfo => layoutInfo.labelBBox.y)
+        .attr("width", layoutInfo => layoutInfo.labelBBox.width)
+        .attr("height", layoutInfo => layoutInfo.labelBBox.height);
+}
+
+function renderTexts(root, layoutInfos) {
+    const textGroup = root.append("g").attr("class", "exentric-labeling-text");
+    textGroup.selectAll("text")
+        .data(layoutInfos)
+        .join("text")
+        .attr("stroke", layoutInfo => layoutInfo.rawInfo.color)
+        .attr("x", layoutInfo => layoutInfo.labelBBox.x)
+        .attr("y", layoutInfo => layoutInfo.labelBBox.y)
+        .attr("dominant-baseline", "hanging")
+        .text(layoutInfo => layoutInfo.name)
+    console.log(textGroup.selectAll("*").nodes().map(n => n.getBBox().height));
+}
+
 
 
 
