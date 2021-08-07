@@ -29,6 +29,9 @@ export default function exentricLabeling(){
     let verticallyCoherent = false;
     let horizontallyCoherent = false;
     let rawInfos: RawInfo[] = [];
+    let labelsSpace = 3;
+    let leftSpace = 20;
+    let rightSpace = 20;
 
     function computeExentricLabelingLayout(cx: number, cy: number): LayoutInfo[]{
         let filteredRawInfos = filterObjInLens(rawInfos, cx, cy, radius);
@@ -39,7 +42,7 @@ export default function exentricLabeling(){
             computePointsOnLens(layoutInfos, cx, cy, radius);
         }
         dividedIntoLeftOrRight(layoutInfos, cx, cy);
-        computeMiddlePoints(layoutInfos, cx, cy, radius);
+        computeMiddlePoints(layoutInfos, cx, cy, radius, labelsSpace, leftSpace, rightSpace);
         computeEndPoints(layoutInfos, cx, horizontallyCoherent);
         computeLabelBBox(layoutInfos);
         return layoutInfos;
@@ -63,6 +66,23 @@ export default function exentricLabeling(){
     };
     computeExentricLabelingLayout.rawInfos = (_: RawInfo[]) => {
         rawInfos = _;
+        return computeExentricLabelingLayout;
+    };
+    computeExentricLabelingLayout.labelsSpace = (_: number) => {
+        labelsSpace = _;
+        return computeExentricLabelingLayout;
+    };
+    computeExentricLabelingLayout.leftSpace = (_: number) => {
+        leftSpace = _;
+        return computeExentricLabelingLayout;
+    };
+    computeExentricLabelingLayout.rightSpace = (_: number) => {
+        rightSpace = _;
+        return computeExentricLabelingLayout;
+    };
+    computeExentricLabelingLayout.leftAndRightSpace = (_: number) => {
+        rightSpace = _;
+        leftSpace = _;
         return computeExentricLabelingLayout;
     };
 
@@ -117,29 +137,27 @@ function computePointsOnLens(layoutInfos: LayoutInfo[], cx: number, cy: number, 
     }
 }
 
-function computeMiddlePoints(layoutInfos: LayoutInfo[], cx: number, cy: number, r: number): void {
-    const spaceX = 20; // space between the leftmost of lens and the middle points
-    const spaceBetweenLabels = 3;
+function computeMiddlePoints(layoutInfos: LayoutInfo[], cx: number, cy: number, r: number, labelsSpace: number, leftSpace: number, rightSpace: number): void {
     const sortAccordingY = (li1: LayoutInfo, li2: LayoutInfo) => li1.controlPoints[li1.controlPoints.length - 1].y - li2.controlPoints[li2.controlPoints.length - 1].y;
-    const computeSpaceHeight = (layoutInfos: LayoutInfo[], spaceBetweenLabels: number) => layoutInfos.reduce((acc, layoutInfo) => acc + layoutInfo.labelBBox.height, 0) + spaceBetweenLabels * (layoutInfos.length - 1);
+    const computeSpaceHeight = (layoutInfos: LayoutInfo[], labelsSpace: number) => layoutInfos.reduce((acc, layoutInfo) => acc + layoutInfo.labelBBox.height, 0) + labelsSpace * (layoutInfos.length - 1);
 
     const layoutInfosLeft: LayoutInfo[] = [];
     const layoutInfosRight: LayoutInfo[] = [];
     layoutInfos.forEach(layoutInfo => layoutInfo.left ? layoutInfosLeft.push(layoutInfo) : layoutInfosRight.push(layoutInfo));
 
-    if (layoutInfosLeft.length > 0) computeOneSide(layoutInfosLeft, spaceBetweenLabels, true);
-    if (layoutInfosRight.length > 0) computeOneSide(layoutInfosRight, spaceBetweenLabels, false);
+    if (layoutInfosLeft.length > 0) computeOneSide(layoutInfosLeft, labelsSpace, true);
+    if (layoutInfosRight.length > 0) computeOneSide(layoutInfosRight, labelsSpace, false);
 
-    function computeOneSide(layoutInfosOneSide: LayoutInfo[], spaceBetweenLabels: number, left: boolean) {
+    function computeOneSide(layoutInfosOneSide: LayoutInfo[], labelsSpace: number, left: boolean) {
         layoutInfosOneSide.sort(sortAccordingY);
-        const spaceHeight = computeSpaceHeight(layoutInfosOneSide, spaceBetweenLabels);
+        const spaceHeight = computeSpaceHeight(layoutInfosOneSide, labelsSpace);
         let labelY = cy - (spaceHeight / 2)
         layoutInfosOneSide.forEach((layoutInfo, i, layoutInfos) => {
             if (i !== 0) {
-                labelY += layoutInfos[i - 1].labelBBox.height + spaceBetweenLabels;
+                labelY += layoutInfos[i - 1].labelBBox.height + labelsSpace;
             }
             layoutInfo.controlPoints.push({
-                x: left ? cx - r - spaceX : cx + r + spaceX,
+                x: left ? cx - r - leftSpace: cx + r + rightSpace,
                 y: labelY + (layoutInfo.labelBBox.height >> 1)
             });
         });

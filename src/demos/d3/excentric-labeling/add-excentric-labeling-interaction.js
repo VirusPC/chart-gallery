@@ -109,7 +109,6 @@ function renderLabelsAndLines(root, cx, cy, r, objs, maxLabelsNum, colorField, l
     const rawInfos = getRawInfos(objs, colorField, labelField, colorScale);
     computeSizeOfLabels(rawInfos, root);
     const excentricLabelingComputer = exentricLabeling()
-        .verticallyCoherent(false)
         .horizontallyCoherent(true)
         .radius(r)
         .maxLabelsNum(maxLabelsNum)
