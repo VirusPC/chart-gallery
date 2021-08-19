@@ -30,7 +30,8 @@ module.exports = function (plop) {
         }],
         actions: (answers) => [{
             type: 'add',
-            path: 'src/demos/{{kebabCase framework}}/{{kebabCase name}}/index.js'
+            path: 'src/demos/{{kebabCase framework}}/{{kebabCase name}}/index.js',
+            templateFile: 'templates/index.js'
         },{
             type: 'add',
             path: 'src/demos/{{kebabCase framework}}/{{kebabCase name}}/index.html',
