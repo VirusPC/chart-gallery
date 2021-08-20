@@ -68,13 +68,14 @@ function renderTop(root, layoutBox, data) {
     axisXGroup.call(d3.axisBottom(scaleX).tickSizeOuter(0));
     axisYGroup.call(d3.axisLeft(scaleY));
     const area = mainGroup.append("path")
+        .datum(data)
         .attr("fill", "steelblue")
-        .attr("d", areaGenerator(data));
+        .attr("d", areaGenerator);
     
     function redraw(newDomain) {
         scaleX.domain(newDomain);
         axisXGroup.call(d3.axisBottom(scaleX).tickSizeOuter(0));
-        area.attr("d", areaGenerator(data));
+        area.attr("d", areaGenerator);
     }
 
     return redraw;
