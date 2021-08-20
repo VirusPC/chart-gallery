@@ -309,6 +309,7 @@ function addAnnotationInteraction(
       }
     }
     if (annotationTarget === null) return;
+    if(annotationTarget._annotationGroup) annotationTarget._annotationGroup.remove();
 
     //start = d3.pointer(e.sourceEvent, root.node());
     const targetDatum =  d3.select(annotationTarget).datum();
