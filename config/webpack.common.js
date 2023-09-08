@@ -15,9 +15,11 @@ fs.readdirSync(dirPath)
 
 console.log("Example List", examples);
 
+const tsEntries = ["ant-v-g-test"];
+
 let entryObj = {};
 for(const framework of Object.keys(examples)){
-  examples[framework].forEach((example) => entryObj[`${framework}-${example}`] = "./" + path.join("./src/demos", framework, example,"index.js"))
+  examples[framework].forEach((example) => entryObj[`${framework}-${example}`] = "./" + path.join("./src/demos", framework, example, tsEntries.find(e => e === `${framework}-${example}`)?"index.ts":"index.js"))
 }
 console.log(entryObj);
 

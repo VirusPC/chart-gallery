@@ -4,18 +4,21 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "webpack serve --config ./config/webpack.dev.js",
+    "start": "export NODE_OPTIONS=--openssl-legacy-provider && webpack serve --config ./config/webpack.dev.js",
     "build": "webpack --config ./config/webpack.prod.js",
     "new": "plop"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@antv/g": "^5.18.14",
+    "@antv/g-canvas": "^1.11.16",
     "@antv/g2": "^4.1.22",
     "@wordpress/token-list": "^1.14.0",
     "d3": "^6.2.0",
     "d3-hexbin": "^0.2.2",
     "d3-sankey": "^0.12.3",
+    "interactjs": "^1.10.18",
     "lodash": "^4.17.20",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
